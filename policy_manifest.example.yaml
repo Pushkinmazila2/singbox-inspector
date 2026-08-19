@@ -1,0 +1,50 @@
+# policy_manifest.yaml
+#
+# This is your "source of truth" for what SHOULD happen — ideally generated
+# from (or kept in sync with) the `route.rules` section of your sing-box
+# config, rather than maintained by hand forever. Rules are evaluated
+# top-to-bottom, first match wins, same semantics as sing-box route rules.
+#
+# match types supported by rule_checker.py:
+#   domain          - exact domain match
+#   domain_suffix   - domain ends with value
+#   domain_keyword  - domain contains value
+#   ip_cidr         - destination IP in CIDR
+#   geosite / geoip - recorded but NOT verified locally (sing-box resolves
+#                      these internally); checker will mark these as
+#                      "unverifiable" rather than silently assuming pass.
+#   default         - catch-all, must be last entry
+
+rules:
+  - match: domain_suffix
+    value: "googlevideo.com"
+    expected_outbound: "proxy-us"
+
+  - match: domain_keyword
+    value: "youtube"
+    expected_outbound: "proxy-us"
+
+  - match: domain_suffix
+    value: "yandex.ru"
+    expected_outbound: "direct"
+
+  - match: ip_cidr
+    value: "192.168.0.0/16"
+    expected_outbound: "direct"
+
+  - match: geosite
+    value: "category-ads-all"
+    expected_outbound: "block"
+
+  - match: default
+    expected_outbound: "proxy-default"
+
+# Canary targets used by leak_checker.py for active probing.
+# expected_outbound must match one of the outbound tags above (informational).
+canaries:
+  - target: "https://ifconfig.me/ip"
+    expected_outbound: "proxy-default"
+    expected_country: "NL"     # optional, checked via ip-api.com/json/<ip> if set
+
+  - target: "https://yandex.ru"
+    expected_outbound: "direct"

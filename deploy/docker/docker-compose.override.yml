@@ -1,0 +1,27 @@
+# docker-compose.override.yml
+#
+# Drop this alongside your existing sing-box compose file (or merge it in)
+# to add the agent as a sidecar sharing sing-box's network namespace.
+# Because it shares the netns, CLASH_API_URL stays http://127.0.0.1:9090
+# unchanged — same env file works for both native and docker deployments.
+
+services:
+  singbox-agent:
+    build: ../..            # points at the singbox-agent/ project root (Dockerfile below)
+    network_mode: "service:singbox"   # <- shares net namespace with the singbox service
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    env_file:
+      - ./agent.env
+    volumes:
+      - ../../policy_manifest.example.yaml:/etc/singbox-agent/policy_manifest.yaml:ro
+      - ./setup-nft-rules.sh:/opt/setup-nft-rules.sh:ro
+    entrypoint: ["/bin/sh", "-c", "/opt/setup-nft-rules.sh && python3 /app/run.py"]
+    depends_on:
+      - singbox
+    # metrics port is exposed on the SAME netns as singbox, so publish it
+    # from whichever service actually owns port binding in your setup —
+    # if singbox already publishes ports, add "9091:9091" there instead.
+    ports:
+      - "127.0.0.1:9091:9091"

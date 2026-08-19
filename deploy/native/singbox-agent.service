@@ -1,0 +1,24 @@
+[Unit]
+Description=singbox-agent (rule drift + leak detection)
+After=singbox.service network-online.target
+Requires=singbox.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/opt/singbox-agent/deploy/setup-nft-rules.sh
+ExecStart=/usr/bin/python3 /opt/singbox-agent/run.py
+EnvironmentFile=/etc/singbox-agent/env
+WorkingDirectory=/opt/singbox-agent
+
+# Needs to read nftables counters and (if TUN-based) interface state.
+# Does NOT need write access to the ruleset beyond initial setup above.
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+NoNewPrivileges=false
+
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+scrape_configs:
+  - job_name: "singbox-agents"
+    scrape_interval: 15s
+    static_configs:
+      - targets:
+          - "node1:9091"
+          - "node2:9091"
+          - "node3:9091"
+        labels:
+          group: "singbox-fleet"
+
+# Example alert rules (put in a separate rules file referenced from
+# prometheus.yml's rule_files):
+#
+# groups:
+#   - name: singbox-agent
+#     rules:
+#       - alert: SingboxRuleDrift
+#         expr: increase(singbox_rule_drift_total[10m]) > 0
+#         labels: { severity: warning }
+#         annotations:
+#           summary: "Rule drift on {{ $labels.node }}: {{ $labels.rule }}"
+#
+#       - alert: SingboxDNSLeak
+#         expr: increase(singbox_dns_leak_packets_total[5m]) > 0
+#         labels: { severity: critical }
+#         annotations:
+#           summary: "DNS leak detected on {{ $labels.node }}"
+#
+#       - alert: SingboxCanaryMismatch
+#         expr: singbox_canary_exit_match == 0
+#         for: 2m
+#         labels: { severity: critical }
+#         annotations:
+#           summary: "Canary {{ $labels.target }} exiting via unexpected path on {{ $labels.node }}"
+#
+#       - alert: SingboxAgentDown
+#         expr: singbox_agent_up == 0
+#         for: 5m
+#         labels: { severity: warning }
+#         annotations:
+#           summary: "singbox-agent on {{ $labels.node }} can't reach Clash API"
